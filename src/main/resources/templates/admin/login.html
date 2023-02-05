@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>personal blog | Log in</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" th:href="@{/admin/dist/img/favicon.png}"/>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" th:href="@{/admin/dist/css/font-awesome.min.css}">
+    <!-- Ionicons -->
+    <link rel="stylesheet" th:href="@{/admin/dist/css/ionicons.min.css}">
+    <!-- Theme style -->
+    <link rel="stylesheet" th:href="@{/admin/dist/css/adminlte.min.css}">
+    <style>
+        canvas {
+            display: block;
+            vertical-align: bottom;
+        }
+        #particles {
+            background-color: #F7FAFC;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="hold-transition login-page">
+<div id="particles">
+</div>
+<div id="main" class="login-box">
+    <div class="login-logo" style="color: #007bff;">
+        <h1>personal blog</h1>
+    </div>
+    <!-- /.login-logo -->
+    <div class="card">
+        <div class="card-body login-card-body">
+            <form id="loginForm" name="loginForm" method="post">
+                <div class="form-group has-feedback">
+                    <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名"
+                           required="true">
+                </div>
+                <div class="form-group has-feedback">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码"
+                           required="true" minlength="6" maxlength="12">
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <input type="text" class="form-control" id="verifyCode" name="verifyCode" placeholder="请输入验证码" required="true">
+                    </div>
+                    <div class="col-6">
+                        <img alt="单击图片刷新！" class="pointer" th:src="@{/common/kaptcha}"
+                             onclick="this.src='/common/kaptcha?d='+new Date()*1">
+                    </div>
+                </div>
+                <div class="form-group has-feedback"></div>
+                <div class="row">
+                    <div class="col-12">
+                        <button class="btn btn-primary btn-block btn-flat" onclick="login()">登录/注册</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+        <!-- /.login-card-body -->
+    </div>
+</div>
+<!-- /.login-box -->
+<!-- jQuery -->
+<script th:src="@{/admin/plugins/jquery/jquery.min.js}"></script>
+<!-- Bootstrap 4 -->
+<script th:src="@{/admin/plugins/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/admin/dist/js/plugins/particles.js}"></script>
+<script th:src="@{/admin/dist/js/plugins/login-bg-particles.js}"></script>
+<!-- jquery-validator -->
+<script type="text/javascript" th:src="@{/admin/dist/jquery-validation/jquery.validate.min.js}"></script>
+<script type="text/javascript" th:src="@{/admin/dist/jquery-validation/localization/messages_zh.min.js}"></script>
+<!-- md5.js -->
+<script type="text/javascript" th:src="@{/admin/dist/js/md5.min.js}"></script>
+<!-- common.js -->
+<script th:src="@{/admin/dist/js/common.js}"></script>
+<!-- layer -->
+<script type="text/javascript" th:src="@{/admin/dist/layer/layer.js}"></script>
+<script th:src="@{/admin/dist/js/vue.js}"></script>
+<script th:src="@{/admin/dist/js/axios.min.js}"></script>
+<!-- 引入组件库 -->
+<script th:src="@{/admin/dist/js/element.js}"></script>
+<script th:src="@{/admin/dist/js/footer.js}"></script>
+<script>
+     function login() {
+        $("#loginForm").validate({
+            submitHandler: function (form) {
+                doLogin();
+            }
+        });
+     }
+     function doLogin() {
+        //加载中
+        g_showLoading();
+        var inputPass = $("#password").val();
+        var salt = g_passsword_salt;
+        //将盐值中的特定字符和表单中的password进行拼接，然后进行md5加密
+        var str = "" + salt.charAt(0) + salt.charAt(2) + inputPass + salt.charAt(5) + salt.charAt(4);
+        var password = md5(str);
+        $.ajax({
+            //点击提交按钮之后，发送请求，来到了/user/login中
+            url: "/user/login",
+            type: "POST",
+            data: {
+                //传递的参数
+                username: $("#username").val(),
+                password: password,
+                verifyCode: $("#verifyCode").val()
+            },
+            //这时候返回的数据data就是上面的doLogin的返回值Result
+            //所以对应的code,msg就是RespBean中的属性值
+            //而success的意思是能够成功执行了方法doLogin,并且有返回值
+            //所以在success方法的内部中需要判断它的状态码
+            success: function (data) {
+                if (data.code == 200) {
+                    layer.close();
+                    sessionStorage.setItem("token", data.obj);
+                    //登录完毕之后，发送admin/请求，来到后台首页
+                    location.href = "/admin/";
+                } else {
+                    layer.msg(data.msg);
+                }
+            },
+            error: function () {
+                //执行doLogin方法抛出异常的时候
+                layer.msg("后台服务出现异常");
+            }
+        })
+     }
+</script>
+</body>
+</html>
